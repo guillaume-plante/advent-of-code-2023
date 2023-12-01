@@ -1,21 +1,30 @@
 use std::collections::HashMap;
-use std::fs;
 use std::str::FromStr;
+use std::{env, fs};
 
 fn main() {
-    let file: String = fs::read_to_string("input-b.txt").unwrap();
+    let args: Vec<String> = env::args().collect();
+    if args.len() < 2 {
+        panic!("You need to pass the part number in arg")
+    }
+
+    let x: (&str, fn(&str) -> u32) = match args[1].as_str() {
+        "1" => ("input-a1.txt", part_one),
+        "2" => ("input-b.txt", part_two),
+        _ => panic!("Not a valid part number"),
+    };
+
+    let file: String = fs::read_to_string(x.0).expect("The input file must exist");
+
     let start = std::time::Instant::now();
-    let result = process(&file, part_two);
+    let result = process(&file, x.1);
     eprintln!("{:?}", start.elapsed());
+
     println!("{:?}", result);
 }
 
 fn process(input: &str, extractor: fn(&str) -> u32) -> u32 {
-    input
-        .split('\n')
-        .map(extractor)
-        .reduce(|acc, e| acc + e)
-        .unwrap()
+    input.split('\n').map(extractor).sum()
 }
 
 fn part_one(line: &str) -> u32 {
@@ -58,7 +67,6 @@ fn part_two(line: &str) -> u32 {
         ("eight", '8'),
         ("nine", '9'),
     ]);
-
 
     let mut first = ' ';
     let mut second = ' ';
