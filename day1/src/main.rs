@@ -1,11 +1,13 @@
-use std::fs;
 use std::collections::HashMap;
+use std::fs;
 use std::str::FromStr;
 
 fn main() {
     let file: String = fs::read_to_string("input-b.txt").unwrap();
+    let start = std::time::Instant::now();
     let result = process(&file, part_two);
-    println!("{:?}", result)
+    eprintln!("{:?}", start.elapsed());
+    println!("{:?}", result);
 }
 
 fn process(input: &str, extractor: fn(&str) -> u32) -> u32 {
@@ -21,13 +23,18 @@ fn part_one(line: &str) -> u32 {
     let mut second = ' ';
 
     for char in line.chars() {
-        if char.is_digit(10) {
-            if first == ' ' {
-                first = char;
-            } else {
-                second = char
-            }
+        if !char.is_digit(10) {
+            continue;
         }
+        first = char;
+        break;
+    }
+    for char in line.chars().rev() {
+        if !char.is_digit(10) {
+            continue;
+        }
+        second = char;
+        break;
     }
     if second == ' ' {
         second = first;
@@ -39,12 +46,25 @@ fn part_one(line: &str) -> u32 {
 }
 
 fn part_two(line: &str) -> u32 {
+    let dict: HashMap<&str, char> = HashMap::from([
+        ("zero", '0'),
+        ("one", '1'),
+        ("two", '2'),
+        ("three", '3'),
+        ("four", '4'),
+        ("five", '5'),
+        ("six", '6'),
+        ("seven", '7'),
+        ("eight", '8'),
+        ("nine", '9'),
+    ]);
+
 
     let mut first = ' ';
     let mut second = ' ';
 
     for (index, char) in line.chars().enumerate() {
-        let result = string_digit(&line[index..]);
+        let result = string_digit(&dict, &line[index..]);
 
         if char.is_digit(10) {
             if first == ' ' {
@@ -69,27 +89,14 @@ fn part_two(line: &str) -> u32 {
     u32::from_str(&string).unwrap()
 }
 
-fn string_digit(line: &str) -> char {
-    let dict: HashMap<&str, char> = HashMap::from([
-        ("zero", '0'),
-        ("one", '1'),
-        ("two", '2'),
-        ("three", '3'),
-        ("four", '4'),
-        ("five", '5'),
-        ("six", '6'),
-        ("seven", '7'),
-        ("eight", '8'),
-        ("nine", '9')
-    ]);
-
+fn string_digit(dict: &HashMap<&str, char>, line: &str) -> char {
     for i in 0..line.len() {
-        let y = &line[0..i+1];
+        let y = &line[0..i + 1];
         let x = dict.get(y);
         if x.is_none() {
-            continue
+            continue;
         }
-        return x.unwrap().clone()
+        return x.unwrap().clone();
     }
     'a'
 }
