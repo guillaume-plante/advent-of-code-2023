@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-use std::str::FromStr;
 use std::{env, fs};
 
 fn main() {
@@ -9,7 +7,7 @@ fn main() {
     }
 
     let x: (&str, fn(&str) -> u32) = match args[1].as_str() {
-        "1" => ("input-a1.txt", part_one),
+        "1" => ("input-a.txt", part_one),
         "2" => ("input-b.txt", part_two),
         _ => panic!("Not a valid part number"),
     };
@@ -17,96 +15,59 @@ fn main() {
     let file: String = fs::read_to_string(x.0).expect("The input file must exist");
 
     let start = std::time::Instant::now();
-    let result = process(&file, x.1);
+    let result = file.lines().map(x.1).sum::<u32>();
     eprintln!("{:?}", start.elapsed());
 
     println!("{:?}", result);
 }
 
-fn process(input: &str, extractor: fn(&str) -> u32) -> u32 {
-    input.split('\n').map(extractor).sum()
-}
-
 fn part_one(line: &str) -> u32 {
-    let mut first = ' ';
-    let mut second = ' ';
+    let mut it = line.chars().filter_map(|char| char.to_digit(10));
 
-    for char in line.chars() {
-        if !char.is_digit(10) {
-            continue;
-        }
-        first = char;
-        break;
-    }
-    for char in line.chars().rev() {
-        if !char.is_digit(10) {
-            continue;
-        }
-        second = char;
-        break;
-    }
-    if second == ' ' {
-        second = first;
-    }
+    let first = it.next().expect("should be a number");
 
-    let mut string = String::from(first);
-    string.push(second);
-    u32::from_str(&string).unwrap()
+    match it.last() {
+        Some(num) => format!("{first}{num}"),
+        None => format!("{first}{first}"),
+    }
+    .parse::<u32>()
+    .expect("should be a valid number")
 }
 
 fn part_two(line: &str) -> u32 {
-    let dict: HashMap<&str, char> = HashMap::from([
-        ("zero", '0'),
-        ("one", '1'),
-        ("two", '2'),
-        ("three", '3'),
-        ("four", '4'),
-        ("five", '5'),
-        ("six", '6'),
-        ("seven", '7'),
-        ("eight", '8'),
-        ("nine", '9'),
-    ]);
+    let mut it = (0..line.len()).filter_map(|index| {
+        let reduced_line = &line[index..];
+        let result = if reduced_line.starts_with("one") {
+            '1'
+        } else if reduced_line.starts_with("two") {
+            '2'
+        } else if reduced_line.starts_with("three") {
+            '3'
+        } else if reduced_line.starts_with("four") {
+            '4'
+        } else if reduced_line.starts_with("five") {
+            '5'
+        } else if reduced_line.starts_with("six") {
+            '6'
+        } else if reduced_line.starts_with("seven") {
+            '7'
+        } else if reduced_line.starts_with("eight") {
+            '8'
+        } else if reduced_line.starts_with("nine") {
+            '9'
+        } else {
+            reduced_line.chars().next().unwrap()
+        };
+        result.to_digit(10)
+    });
+    let first = it.next().expect("should be a number");
 
-    let mut first = ' ';
-    let mut second = ' ';
-
-    for (index, char) in line.chars().enumerate() {
-        let result = string_digit(&dict, &line[index..]);
-
-        if char.is_digit(10) {
-            if first == ' ' {
-                first = char;
-            } else {
-                second = char
-            }
-        } else if result != 'a' {
-            if first == ' ' {
-                first = result;
-            } else {
-                second = result
-            }
-        }
+    match it.last() {
+        Some(num) => format!("{first}{num}"),
+        None => format!("{first}{first}"),
     }
-    if second == ' ' {
-        second = first;
-    }
-
-    let mut string = String::from(first);
-    string.push(second);
-    u32::from_str(&string).unwrap()
-}
-
-fn string_digit(dict: &HashMap<&str, char>, line: &str) -> char {
-    for i in 0..line.len() {
-        let y = &line[0..i + 1];
-        let x = dict.get(y);
-        if x.is_none() {
-            continue;
-        }
-        return x.unwrap().clone();
-    }
-    'a'
+    .parse::<u32>()
+    .expect("should be a valid number")
 }
 
 #[cfg(test)]
@@ -119,7 +80,7 @@ mod tests {
 pqr3stu8vwx
 a1b2c3d4e5f
 treb7uchet";
-        let result = process(input, part_one);
+        let result = input.lines().map(part_one).sum::<u32>();
         assert_eq!(result, 142);
     }
 
@@ -132,7 +93,7 @@ xtwone3four
 4nineeightseven2
 zoneight234
 7pqrstsixteen";
-        let result = process(input, part_two);
+        let result = input.lines().map(part_two).sum::<u32>();
         assert_eq!(result, 281);
     }
 }
